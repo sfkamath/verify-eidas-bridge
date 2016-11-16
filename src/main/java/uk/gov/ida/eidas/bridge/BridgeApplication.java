@@ -44,7 +44,7 @@ public class BridgeApplication extends Application<BridgeConfiguration> {
         VerifyEidasBridgeFactory verifyEidasBridgeFactory = new VerifyEidasBridgeFactory(environment, configuration);
 
         AuthnRequestHandler authnRequestHandler = verifyEidasBridgeFactory.getAuthnRequestHandler();
-        environment.jersey().register(new VerifyAuthnRequestResource(authnRequestHandler, new EidasAuthnRequestGenerator()));
+        environment.jersey().register(new VerifyAuthnRequestResource(authnRequestHandler, new EidasAuthnRequestGenerator("TODO")));
 
         Map<String, HealthCheck> healthChecks = of(
             "verify-metadata", new MetadataHealthCheck(verifyEidasBridgeFactory.getVerifyMetadataResolver(), configuration.getVerifyMetadataConfiguration().getExpectedEntityId()),
