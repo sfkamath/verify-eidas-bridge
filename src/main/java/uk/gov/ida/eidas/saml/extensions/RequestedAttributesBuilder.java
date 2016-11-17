@@ -10,12 +10,12 @@ public class RequestedAttributesBuilder extends AbstractSAMLObjectBuilder<Reques
     @Nonnull
     @Override
     public RequestedAttributes buildObject() {
-        return buildObject(RequestedAttributes.EIDAS_EXTENSIONS_NAMESPACE, RequestedAttributes.DEFAULT_ELEMENT_LOCAL_NAME, NamespaceConstants.EIDAS_EXTENSIONS_LOCAL_NAME);
+        return buildObject(NamespaceConstants.EIDAS_EXTENSIONS_NAMESPACE, RequestedAttributes.DEFAULT_ELEMENT_LOCAL_NAME, NamespaceConstants.EIDAS_EXTENSIONS_LOCAL_NAME);
     }
 
     @Nonnull
     @Override
     public RequestedAttributes buildObject(@Nullable String namespaceURI, @Nonnull @NotEmpty String localName, @Nullable String namespacePrefix) {
-        return null;
+        return new RequestedAttributesImpl(namespaceURI, localName, namespacePrefix);
     }
 }
