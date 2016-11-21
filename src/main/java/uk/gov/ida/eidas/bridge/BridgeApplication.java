@@ -4,6 +4,7 @@ import com.codahale.metrics.health.HealthCheck;
 import io.dropwizard.Application;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.SubstitutingSourceProvider;
+import io.dropwizard.jersey.setup.JerseyEnvironment;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.dropwizard.views.ViewBundle;
@@ -12,7 +13,6 @@ import uk.gov.ida.eidas.bridge.configuration.BridgeConfiguration;
 import uk.gov.ida.eidas.bridge.factories.VerifyEidasBridgeFactory;
 import uk.gov.ida.eidas.bridge.helpers.AuthnRequestFormGenerator;
 import uk.gov.ida.eidas.bridge.helpers.AuthnRequestHandler;
-import uk.gov.ida.eidas.bridge.helpers.EidasAuthnRequestGenerator;
 import uk.gov.ida.eidas.bridge.helpers.EidasSamlBootstrap;
 import uk.gov.ida.eidas.bridge.resources.VerifyAuthnRequestResource;
 import uk.gov.ida.saml.dropwizard.metadata.MetadataHealthCheck;
@@ -20,6 +20,7 @@ import uk.gov.ida.saml.dropwizard.metadata.MetadataHealthCheck;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
+import java.security.cert.CertificateEncodingException;
 import java.util.Map;
 
 import static com.google.common.collect.ImmutableMap.of;
@@ -40,18 +41,20 @@ public class BridgeApplication extends Application<BridgeConfiguration> {
         bootstrap.addBundle(new ViewBundle<>());
         bootstrap.setConfigurationSourceProvider(
                 new SubstitutingSourceProvider(bootstrap.getConfigurationSourceProvider(),
-                        new EnvironmentVariableSubstitutor(true)
+                        new EnvironmentVariableSubstitutor(false)
                 )
         );
     }
 
     @Override
-    public void run(BridgeConfiguration configuration, Environment environment) throws ComponentInitializationException, UnrecoverableKeyException, NoSuchAlgorithmException, KeyStoreException {
+    public void run(BridgeConfiguration configuration, Environment environment) throws ComponentInitializationException, UnrecoverableKeyException, NoSuchAlgorithmException, KeyStoreException, CertificateEncodingException {
         VerifyEidasBridgeFactory verifyEidasBridgeFactory = new VerifyEidasBridgeFactory(environment, configuration);
 
         AuthnRequestHandler authnRequestHandler = verifyEidasBridgeFactory.getAuthnRequestHandler();
         AuthnRequestFormGenerator authnRequestFormGenerator = verifyEidasBridgeFactory.getAuthnRequestFormGenerator();
-        environment.jersey().register(new VerifyAuthnRequestResource(authnRequestHandler, authnRequestFormGenerator));
+        JerseyEnvironment jersey = environment.jersey();
+        jersey.register(new VerifyAuthnRequestResource(authnRequestHandler, authnRequestFormGenerator));
+        jersey.register(verifyEidasBridgeFactory.getBridgeMetadataResource());
 
         Map<String, HealthCheck> healthChecks = of(
             "verify-metadata", new MetadataHealthCheck(verifyEidasBridgeFactory.getVerifyMetadataResolver(), configuration.getVerifyMetadataConfiguration().getExpectedEntityId()),
@@ -59,5 +62,4 @@ public class BridgeApplication extends Application<BridgeConfiguration> {
         );
         healthChecks.entrySet().stream().forEach(x -> environment.healthChecks().register(x.getKey(), x.getValue()));
     }
-
 }

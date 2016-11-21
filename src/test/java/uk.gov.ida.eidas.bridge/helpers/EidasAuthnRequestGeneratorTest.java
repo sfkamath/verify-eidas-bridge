@@ -34,6 +34,8 @@ import uk.gov.ida.saml.core.test.TestCertificateStrings;
 import uk.gov.ida.saml.core.test.TestCredentialFactory;
 
 import javax.xml.namespace.QName;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -62,6 +64,7 @@ public class EidasAuthnRequestGeneratorTest {
         Assert.assertEquals(false, authnRequest.isPassive());
         Assert.assertEquals(SAMLVersion.VERSION_20, authnRequest.getVersion());
         Assert.assertEquals(EidasAuthnRequestGenerator.PROVIDER_NAME, authnRequest.getProviderName());
+        Assert.assertNotNull(authnRequest.getIssueInstant());
 
         Issuer issuer = authnRequest.getIssuer();
         Assert.assertEquals(entityId, issuer.getValue());

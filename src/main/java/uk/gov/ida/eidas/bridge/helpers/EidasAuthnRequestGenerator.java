@@ -1,5 +1,6 @@
 package uk.gov.ida.eidas.bridge.helpers;
 
+import org.joda.time.DateTime;
 import org.opensaml.core.xml.Namespace;
 import org.opensaml.core.xml.XMLObjectBuilder;
 import org.opensaml.core.xml.XMLObjectBuilderFactory;
@@ -29,6 +30,7 @@ import uk.gov.ida.eidas.saml.extensions.SPTypeImpl;
 import uk.gov.ida.saml.core.OpenSamlXmlObjectFactory;
 
 import javax.annotation.Nonnull;
+import java.util.Date;
 
 public class EidasAuthnRequestGenerator {
     public static final String PROVIDER_NAME = "PROVIDER_NAME";
@@ -53,6 +55,7 @@ public class EidasAuthnRequestGenerator {
         eidasAuthnRequest.setForceAuthn(true);
         eidasAuthnRequest.setProviderName(PROVIDER_NAME);
         eidasAuthnRequest.setIssuer(openSamlXmlObjectFactory.createIssuer(entityId));
+        eidasAuthnRequest.setIssueInstant(new DateTime());
 
         NameIDPolicy nameIdPolicy = openSamlXmlObjectFactory.createNameIdPolicy();
         nameIdPolicy.setFormat(NameIDType.UNSPECIFIED);

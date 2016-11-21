@@ -2,7 +2,6 @@ package uk.gov.ida.eidas.bridge.configuration;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.dropwizard.Configuration;
-import uk.gov.ida.eidas.bridge.configuration.SigningKeyStoreConfiguration;
 import uk.gov.ida.saml.metadata.MetadataConfiguration;
 
 import javax.validation.Valid;
@@ -30,6 +29,10 @@ public class BridgeConfiguration extends Configuration {
     @Valid
     private SigningKeyStoreConfiguration signingKeyStoreConfiguration;
 
+    @JsonProperty("saml")
+    @Valid
+    private SamlConfiguration samlConfiguration;
+
     public MetadataConfiguration getVerifyMetadataConfiguration() {
         return verifyMetadata;
     }
@@ -48,5 +51,9 @@ public class BridgeConfiguration extends Configuration {
 
     public String getEidasNodeEntityId() {
         return eidasNodeEntityId;
+    }
+
+    public SamlConfiguration getSamlConfiguration() {
+        return samlConfiguration;
     }
 }

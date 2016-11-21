@@ -9,12 +9,15 @@ import org.opensaml.saml.security.impl.MetadataCredentialResolver;
 import org.opensaml.security.credential.BasicCredential;
 import org.opensaml.xmlsec.config.DefaultSecurityConfigurationBootstrap;
 import org.opensaml.xmlsec.signature.support.impl.ExplicitKeySignatureTrustEngine;
+import uk.gov.ida.common.shared.security.Certificate;
 import uk.gov.ida.eidas.bridge.configuration.BridgeConfiguration;
 import uk.gov.ida.eidas.bridge.configuration.SigningKeyStoreConfiguration;
 import uk.gov.ida.eidas.bridge.helpers.AuthnRequestFormGenerator;
 import uk.gov.ida.eidas.bridge.helpers.AuthnRequestHandler;
 import uk.gov.ida.eidas.bridge.helpers.EidasAuthnRequestGenerator;
 import uk.gov.ida.eidas.bridge.helpers.SingleSignOnServiceLocator;
+import uk.gov.ida.eidas.bridge.resources.BridgeMetadataResource;
+import uk.gov.ida.saml.core.OpenSamlXmlObjectFactory;
 import uk.gov.ida.saml.core.api.CoreTransformersFactory;
 import uk.gov.ida.saml.deserializers.StringToOpenSamlObjectTransformer;
 import uk.gov.ida.saml.hub.transformers.inbound.decorators.AuthnRequestSizeValidator;
@@ -24,6 +27,7 @@ import uk.gov.ida.saml.metadata.KeyStoreLoader;
 import uk.gov.ida.saml.metadata.MetadataConfiguration;
 import uk.gov.ida.saml.metadata.PKIXSignatureValidationFilterProvider;
 import uk.gov.ida.saml.metadata.modules.MetadataModule;
+import uk.gov.ida.saml.metadata.transformers.KeyDescriptorsUnmarshaller;
 import uk.gov.ida.saml.security.MetadataBackedSignatureValidator;
 import uk.gov.ida.saml.serializers.XmlObjectToBase64EncodedStringTransformer;
 
@@ -34,6 +38,12 @@ import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.UnrecoverableKeyException;
+import java.security.cert.CertificateEncodingException;
+import java.util.Collections;
+import java.util.List;
+
+import static java.util.Collections.singletonList;
+import static org.apache.commons.codec.binary.Base64.encodeBase64String;
 
 public class VerifyEidasBridgeFactory {
 
@@ -109,6 +119,15 @@ public class VerifyEidasBridgeFactory {
         return authnRequestFormGenerator;
     }
 
+    public BridgeMetadataResource getBridgeMetadataResource() throws KeyStoreException, CertificateEncodingException {
+        return new BridgeMetadataResource(
+            configuration,
+            new KeyDescriptorsUnmarshaller(new OpenSamlXmlObjectFactory()),
+            new CoreTransformersFactory().getXmlObjectToElementTransformer(),
+            singletonList(getSigningCertificate())
+        );
+    }
+
     private MetadataResolver getMetadataResolver(MetadataConfiguration metadataConfiguration) {
         KeyStore keyStore = new KeyStoreLoader().load(
             metadataConfiguration.getTrustStorePath(),
@@ -158,5 +177,10 @@ public class VerifyEidasBridgeFactory {
             singleSignOnServiceLocator = new SingleSignOnServiceLocator(getEidasMetadataResolver());
         }
         return singleSignOnServiceLocator;
+    }
+
+    private Certificate getSigningCertificate() throws KeyStoreException, CertificateEncodingException {
+        java.security.cert.Certificate certificate = configuration.getSigningKeyStoreConfiguration().getKeyStore().getCertificate(SIGNING_KEY_ALIAS);
+        return new Certificate(configuration.getEidasNodeEntityId(), encodeBase64String(certificate.getEncoded()), Certificate.KeyUse.Signing);
     }
 }
