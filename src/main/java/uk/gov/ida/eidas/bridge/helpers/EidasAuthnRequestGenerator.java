@@ -17,6 +17,7 @@ import org.opensaml.saml.saml2.core.StatusResponseType;
 import org.opensaml.saml.saml2.core.impl.ExtensionsBuilder;
 import org.opensaml.security.credential.Credential;
 import org.opensaml.xmlsec.signature.Signature;
+import org.opensaml.xmlsec.signature.support.SignatureConstants;
 import org.opensaml.xmlsec.signature.support.SignatureException;
 import org.opensaml.xmlsec.signature.support.Signer;
 import uk.gov.ida.eidas.common.LevelOfAssurance;
@@ -85,6 +86,7 @@ public class EidasAuthnRequestGenerator {
         extensions.getUnknownXMLObjects().add(requestedAttributesObject);
 
         Signature signature = openSamlXmlObjectFactory.createSignature();
+        signature.setSignatureAlgorithm(SignatureConstants.ALGO_ID_SIGNATURE_RSA_SHA512);
         signature.setSigningCredential(signingCredential);
         eidasAuthnRequest.setSignature(signature);
 

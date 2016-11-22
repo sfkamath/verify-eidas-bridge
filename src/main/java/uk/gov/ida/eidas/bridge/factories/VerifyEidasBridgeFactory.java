@@ -7,6 +7,7 @@ import org.opensaml.saml.metadata.resolver.impl.BasicRoleDescriptorResolver;
 import org.opensaml.saml.saml2.core.AuthnRequest;
 import org.opensaml.saml.security.impl.MetadataCredentialResolver;
 import org.opensaml.security.credential.BasicCredential;
+import org.opensaml.security.x509.BasicX509Credential;
 import org.opensaml.xmlsec.config.DefaultSecurityConfigurationBootstrap;
 import org.opensaml.xmlsec.signature.support.impl.ExplicitKeySignatureTrustEngine;
 import uk.gov.ida.common.shared.security.Certificate;
@@ -39,8 +40,7 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateEncodingException;
-import java.util.Collections;
-import java.util.List;
+import java.security.cert.X509Certificate;
 
 import static java.util.Collections.singletonList;
 import static org.apache.commons.codec.binary.Base64.encodeBase64String;
@@ -119,13 +119,18 @@ public class VerifyEidasBridgeFactory {
         return authnRequestFormGenerator;
     }
 
-    public BridgeMetadataResource getBridgeMetadataResource() throws KeyStoreException, CertificateEncodingException {
+    public BridgeMetadataResource getBridgeMetadataResource() throws KeyStoreException, CertificateEncodingException, UnrecoverableKeyException, NoSuchAlgorithmException {
+        SigningKeyStoreConfiguration signingKeyStoreConfiguration = configuration.getSigningKeyStoreConfiguration();
+        KeyStore keyStore = signingKeyStoreConfiguration.getKeyStore();
+        BasicCredential basicCredential = new BasicCredential(keyStore.getCertificate(SIGNING_KEY_ALIAS).getPublicKey(), (PrivateKey) keyStore.getKey(SIGNING_KEY_ALIAS, "fooBar".toCharArray()));
+        BasicX509Credential x509Credential = new BasicX509Credential((X509Certificate) keyStore.getCertificate(SIGNING_KEY_ALIAS));
         return new BridgeMetadataResource(
             configuration,
             new KeyDescriptorsUnmarshaller(new OpenSamlXmlObjectFactory()),
             new CoreTransformersFactory().getXmlObjectToElementTransformer(),
-            singletonList(getSigningCertificate())
-        );
+            singletonList(getSigningCertificate()),
+            basicCredential,
+            x509Credential);
     }
 
     private MetadataResolver getMetadataResolver(MetadataConfiguration metadataConfiguration) {
